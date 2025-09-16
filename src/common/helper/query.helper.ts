@@ -1,4 +1,4 @@
-import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 
 export interface PaginationRequestType {
   search?: string;
@@ -259,7 +259,16 @@ export class QueryHelper {
     const nextPage = hasNextPage ? page + 1 : null;
     const prevPage = hasPrevPage ? page - 1 : null;
 
-    return { docs, total, page, limit, hasPrevPage, hasNextPage, nextPage, prevPage };
+    return {
+      docs,
+      total,
+      page,
+      limit,
+      hasPrevPage,
+      hasNextPage,
+      nextPage,
+      prevPage,
+    };
   }
 
   /**

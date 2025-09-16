@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 
 @Entity({
-  name: 'gate.users'
+  name: 'gate.users',
 })
 export class UserEntity {
   @PrimaryGeneratedColumn()
