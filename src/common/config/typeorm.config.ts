@@ -14,7 +14,7 @@ const AppDataSource = new DataSource({
   database: ConfigHelper.get<string>('DATABASE_NAME', null),
   synchronize: false,
   entities: [...ModuleEntity],
-  migrations: ['src/common/database/migrations/*-migration.ts'],
+  migrations: ['src/common/database/migrations/*_migration.ts'],
   migrationsRun: false,
   logging: true,
 });
