@@ -15,6 +15,10 @@ export interface PaginationResponseType<T> {
   total: number;
   page: number;
   limit: number;
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+  nextPage: number | null;
+  prevPage: number | null;
 }
 
 export interface RawQueryBuilder {
@@ -116,7 +120,21 @@ export class QueryHelper {
     const page = params.pagination?.page ?? 1;
     const limit = params.pagination?.limit ?? 10;
 
-    return { docs, total, page, limit };
+    const hasPrevPage = page > 1;
+    const hasNextPage = page * limit < total;
+    const nextPage = hasNextPage ? page + 1 : null;
+    const prevPage = hasPrevPage ? page - 1 : null;
+
+    return {
+      docs,
+      total,
+      page,
+      limit,
+      hasPrevPage,
+      hasNextPage,
+      nextPage,
+      prevPage,
+    };
   }
 
   /**
@@ -236,7 +254,12 @@ export class QueryHelper {
     const page = params.pagination?.page ?? 1;
     const limit = params.pagination?.limit ?? 10;
 
-    return { docs, total, page, limit };
+    const hasPrevPage = page > 1;
+    const hasNextPage = page * limit < total;
+    const nextPage = hasNextPage ? page + 1 : null;
+    const prevPage = hasPrevPage ? page - 1 : null;
+
+    return { docs, total, page, limit, hasPrevPage, hasNextPage, nextPage, prevPage };
   }
 
   /**
