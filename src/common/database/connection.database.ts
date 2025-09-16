@@ -24,7 +24,9 @@ export default class Connection {
    *
    * @param {MixedList<string | Function | EntitySchema<any>>} entities - The entities to be used in the database connection
    */
-  constructor(protected entities: MixedList<string | EntitySchema<any>>) {}
+  constructor(
+    protected entities: MixedList<string | EntitySchema<any> | Function>,
+  ) {}
 
   public getProviders() {
     return [

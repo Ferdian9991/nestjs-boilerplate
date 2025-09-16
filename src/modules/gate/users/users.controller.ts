@@ -19,6 +19,7 @@ import PaginationRequest, {
   PaginationRequestType,
 } from '@/common/decorator/pagination-request.decorator';
 import { PaginationResponseType } from '@/common/helper/query.helper';
+import { IsGlobalAccess } from '@/common/decorator/is-global-access.decorator';
 
 @Controller('users')
 export class UsersController {
@@ -34,6 +35,7 @@ export class UsersController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ tags: ['Create User'] })
   @ResponseMessage('User created successfully')
+  @IsGlobalAccess()
   create(@Body() createUserDto: CreateUserDto): Promise<UserEntity> {
     return this.usersService.create(createUserDto);
   }

@@ -10,6 +10,7 @@ import {
   QueryHelper,
 } from '@/common/helper/query.helper';
 import { HashHelper } from '@/common/helper/hash.helper';
+import Validation from '@/common/error/validation.error';
 
 @Injectable()
 export class UsersService {
@@ -25,6 +26,12 @@ export class UsersService {
    * @returns {Promise<UserEntity>}
    */
   async create(createUserDto: CreateUserDto): Promise<UserEntity> {
+    // Check if username or email already exists
+    await this.checkUsernameOrEmailExists(
+      createUserDto.username,
+      createUserDto.email,
+    );
+
     const user = this.userRepository.create(createUserDto);
 
     user.password = await HashHelper.hash(createUserDto.password);
@@ -82,6 +89,13 @@ export class UsersService {
       delete updateUserDto.password;
     }
 
+    // Check if username or email already exists
+    await this.checkUsernameOrEmailExists(
+      updateUserDto.username,
+      user.email,
+      id,
+    );
+
     Object.assign(user, updateUserDto);
 
     return await this.userRepository.save(user);
@@ -101,5 +115,48 @@ export class UsersService {
     }
 
     return await this.userRepository.remove(user);
+  }
+
+  /**
+   * Check if username or email already exists
+   *
+   * @param {number} [id]
+   * @param {string} username
+   * @param {string} email
+   * @returns {Promise<void>}
+   * @throws {Error}
+   */
+  private async checkUsernameOrEmailExists(
+    username: string,
+    email: string,
+    id?: number,
+  ): Promise<void> {
+    const query = this.userRepository
+      .createQueryBuilder('user')
+      .where('(user.username = :username OR user.email = :email)', {
+        username,
+        email,
+      });
+
+    if (id) {
+      query.andWhere('user.id != :id', { id });
+    }
+
+    const existingUser = await query.getOne();
+
+    if (existingUser) {
+      if (existingUser.username === username) {
+        throw new Validation(
+          JSON.stringify([
+            { field: 'username', message: 'Username already exists' },
+          ]),
+        );
+      }
+      if (existingUser.email === email) {
+        throw new Validation(
+          JSON.stringify([{ field: 'email', message: 'Email already exists' }]),
+        );
+      }
+    }
   }
 }
