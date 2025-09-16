@@ -1,0 +1,251 @@
+import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
+
+export interface PaginationRequestType {
+  search?: string;
+  filter?: Record<string, any>;
+  sort?: Record<string, 1 | -1>;
+  pagination?: {
+    page: number;
+    limit: number;
+  };
+}
+
+export interface PaginationResponseType<T> {
+  docs: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface RawQueryBuilder {
+  sql: string;
+  queryParams: Record<string, number | string | boolean>;
+  page: number;
+  limit: number;
+}
+
+/**
+ * Query Helper
+ * @class QueryHelper
+ */
+export class QueryHelper {
+  /**
+   * Build a TypeORM query with search, filter, sort, and pagination
+   *
+   * @param {Repository<T>} repo
+   * @param {string} alias
+   * @param {PaginationRequestType} params
+   * @param {(keyof T)[]} searchFields
+   * @returns {SelectQueryBuilder<T>}
+   */
+  public static buildQuery<T>(
+    repo: Repository<T>,
+    alias: string,
+    params: PaginationRequestType,
+    searchFields: (keyof T)[] = [],
+  ): SelectQueryBuilder<T> {
+    const { search, filter, sort, pagination } = params;
+    const queryBuilder = repo.createQueryBuilder(alias);
+
+    // Get valid columns from entity metadata
+    const validColumns = this.getEntityColumns(repo);
+
+    if (search && searchFields.length > 0) {
+      const safeSearchFields = searchFields.filter((f) =>
+        validColumns.includes(f as string),
+      );
+
+      if (safeSearchFields.length > 0) {
+        const searchConditions = safeSearchFields
+          .map((field) => `"${alias}"."${String(field)}" ILIKE :search`)
+          .join(' OR ');
+        queryBuilder.andWhere(`(${searchConditions})`, {
+          search: `%${search}%`,
+        });
+      }
+    }
+
+    // Filters
+    if (filter) {
+      Object.entries(filter).forEach(([key, value]) => {
+        if (validColumns.includes(key)) {
+          queryBuilder.andWhere(`"${alias}"."${key}" = :${key}`, {
+            [key]: value,
+          });
+        }
+      });
+    }
+
+    // Sorting
+    if (sort) {
+      Object.entries(sort).forEach(([key, direction]) => {
+        if (validColumns.includes(key)) {
+          queryBuilder.addOrderBy(
+            `"${alias}"."${key}"`,
+            direction === -1 ? 'DESC' : 'ASC',
+          );
+        }
+      });
+    }
+
+    // Pagination
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 10;
+    queryBuilder.skip((page - 1) * limit).take(limit);
+
+    return queryBuilder;
+  }
+
+  /**
+   * Paginate a TypeORM query
+   *
+   * @param {Repository<T>} repo
+   * @param {string} alias
+   * @param {PaginationRequestType} params
+   * @param {(keyof T)[]} searchFields
+   * @returns {Promise<PaginationResponseType<T>>}
+   */
+  public static async paginate<T>(
+    repo: Repository<T>,
+    alias: string,
+    params: PaginationRequestType,
+    searchFields: (keyof T)[] = [],
+  ): Promise<PaginationResponseType<T>> {
+    const queryBuilder = this.buildQuery(repo, alias, params, searchFields);
+    const [docs, total] = await queryBuilder.getManyAndCount();
+    const page = params.pagination?.page ?? 1;
+    const limit = params.pagination?.limit ?? 10;
+
+    return { docs, total, page, limit };
+  }
+
+  /**
+   * Build raw SQL with search, filter, sort, pagination
+   *
+   * @param {string} baseQuery
+   * @param {string} alias
+   * @param {PaginationRequestType} params
+   * @param {string[]} searchFields
+   * @returns {{ sql: string; parameters: any[] }}
+   */
+  static buildRawQuery<T>(
+    repo: Repository<T>,
+    baseQuery: string,
+    alias: string,
+    params: PaginationRequestType,
+    searchFields: string[] = [],
+  ): { sql: string; parameters: any[] } {
+    const { search, filter, sort, pagination } = params;
+    let sql = baseQuery;
+    const conditions: string[] = [];
+    const parameters: any[] = [];
+    let paramIndex = 1; // keep track of $ placeholders
+
+    // Get valid columns from entity metadata
+    const validColumns = this.getEntityColumns(repo);
+
+    // Search
+    if (search && searchFields.length > 0) {
+      const safeSearchFields = searchFields.filter((f) =>
+        validColumns.includes(f),
+      );
+
+      if (safeSearchFields.length > 0) {
+        const searchConditions = safeSearchFields
+          .map((field) => `${alias}.${field} ILIKE $${paramIndex++}`)
+          .join(' OR ');
+        conditions.push(`(${searchConditions})`);
+        parameters.push(...searchFields.map(() => `%${search}%`));
+      }
+    }
+
+    // Filter
+    if (filter) {
+      Object.entries(filter).forEach(([key, value]) => {
+        if (validColumns.includes(key)) {
+          conditions.push(`${alias}.${key} = $${paramIndex++}`);
+          parameters.push(value);
+        }
+      });
+    }
+
+    if (conditions.length > 0) {
+      sql += ` WHERE ${conditions.join(' AND ')}`;
+    }
+
+    // Sort
+    if (sort) {
+      const orderBys = Object.entries(sort)
+        .filter(([key]) => validColumns.includes(key))
+        .map(
+          ([key, direction]) =>
+            `${alias}.${key} ${direction === -1 ? 'DESC' : 'ASC'}`,
+        );
+      if (orderBys.length > 0) {
+        sql += ` ORDER BY ${orderBys.join(', ')}`;
+      }
+    }
+
+    // Pagination
+    const page = pagination?.page ?? 1;
+    const limit = pagination?.limit ?? 10;
+    const offset = (page - 1) * limit;
+    sql += ` LIMIT ${limit} OFFSET ${offset}`;
+
+    return { sql, parameters };
+  }
+
+  /**
+   * Paginate a raw SQL query
+   *
+   * @param {Repository<T>} repo
+   * @param {string} baseQuery
+   * @param {string} alias
+   * @param {PaginationRequestType} params
+   * @param {string[]} searchFields
+   * @returns {Promise<PaginationResponseType<T>>}
+   */
+  static async paginateRawQuery<T>(
+    repo: Repository<T>,
+    baseQuery: string,
+    alias: string,
+    params: PaginationRequestType,
+    searchFields: string[] = [],
+  ): Promise<PaginationResponseType<T>> {
+    const { sql, parameters } = this.buildRawQuery(
+      repo,
+      baseQuery,
+      alias,
+      params,
+      searchFields,
+    );
+
+    const docs = await repo.query(sql, parameters);
+
+    // Count query (without LIMIT/OFFSET)
+    let countSql = baseQuery;
+    if (sql.includes('WHERE')) {
+      countSql += ` WHERE ${sql.split('WHERE')[1].split('ORDER BY')[0].split('LIMIT')[0]}`;
+    }
+    const countResult = await repo.query(
+      `SELECT COUNT(*) as total FROM (${countSql}) as sub`,
+      parameters,
+    );
+
+    const total = parseInt(countResult[0]?.total ?? 0, 10);
+    const page = params.pagination?.page ?? 1;
+    const limit = params.pagination?.limit ?? 10;
+
+    return { docs, total, page, limit };
+  }
+
+  /**
+   * Get valid column names from repository metadata
+   *
+   * @param {Repository<T>} repo
+   * @returns {string[]}
+   */
+  private static getEntityColumns<T>(repo: Repository<T>): string[] {
+    return repo.metadata.columns.map((col) => col.propertyName);
+  }
+}
