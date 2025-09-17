@@ -19,6 +19,8 @@ import PaginationRequest, {
 } from '@/common/decorator/pagination-request.decorator';
 import { PaginationResponseType } from '@/common/helper/query.helper';
 import NumberId from '@/common/decorator/number-id.decorator';
+import { RoleEnum } from './enums/role.enum';
+import { AuthorizeRole } from '@/common/decorator/authorize-role.decorator';
 
 @Controller('roles')
 export class RolesController {
@@ -34,6 +36,7 @@ export class RolesController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ tags: ['Create Role'] })
   @ResponseMessage('Role created successfully')
+  @AuthorizeRole([RoleEnum.ADMIN])
   create(@Body() createRoleDto: CreateRoleDto): Promise<RoleEntity> {
     return this.rolesService.create(createRoleDto);
   }
@@ -47,6 +50,7 @@ export class RolesController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ tags: ['List Role'] })
   @ResponseMessage('Role list fetched successfully')
+  @AuthorizeRole([RoleEnum.ADMIN])
   findAll(
     @PaginationRequest() pagination: PaginationRequestType,
   ): Promise<PaginationResponseType<RoleEntity>> {
@@ -63,6 +67,7 @@ export class RolesController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ tags: ['Get Role'] })
   @ResponseMessage('Role fetched successfully')
+  @AuthorizeRole([RoleEnum.ADMIN])
   findOne(@NumberId('id') id: string): Promise<RoleEntity> {
     return this.rolesService.findOne(+id);
   }
@@ -78,6 +83,7 @@ export class RolesController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ tags: ['Update Role'] })
   @ResponseMessage('Role updated successfully')
+  @AuthorizeRole([RoleEnum.ADMIN])
   update(
     @NumberId('id') id: string,
     @Body() updateRoleDto: UpdateRoleDto,
@@ -95,6 +101,7 @@ export class RolesController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ tags: ['Delete Role'] })
   @ResponseMessage('Role deleted successfully')
+  @AuthorizeRole([RoleEnum.ADMIN])
   remove(@NumberId('id') id: string): Promise<RoleEntity> {
     return this.rolesService.remove(+id);
   }

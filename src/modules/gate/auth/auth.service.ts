@@ -24,11 +24,10 @@ export class AuthService {
    * @returns {Promise<LoginUserType>}
    */
   async login(createAuthDto: CreateAuthDto): Promise<LoginUserType> {
-    const user: LoginUserType = await this.userRepository
-      .createQueryBuilder('user')
-      .addSelect('user.password')
-      .where('user.email = :email', { email: createAuthDto.email })
-      .getOne();
+    const user: LoginUserType = await this.userRepository.findOne({
+      where: { email: createAuthDto.email },
+      relations: ['roles'],
+    });
 
     const unauthorizedException = new Unauthorized('Invalid email or password');
     if (!user) {
@@ -40,7 +39,27 @@ export class AuthService {
       throw unauthorizedException;
     }
 
-    const payload = { sub: user.id };
+    const unauthorizedRoleException = new Unauthorized(
+      `You do not have permission to login as ${createAuthDto.login_as}`,
+    );
+
+    // Check if user has the role to login
+    if (!this.checkHasRole(user, createAuthDto.login_as)) {
+      throw unauthorizedRoleException;
+    }
+
+    const role = user.roles.find((r) => r.code === createAuthDto.login_as);
+
+    if (!role) {
+      throw unauthorizedRoleException;
+    }
+
+    const payload = {
+      sub: user.id,
+      role_id: role.id,
+      role_code: role.code,
+    };
+
     const jwt = await this.jwtService.signAsync(payload, {
       secret: ConfigHelper.get<string>('APP_SECRET'),
       expiresIn: '1d',
@@ -50,5 +69,16 @@ export class AuthService {
     delete user.password;
 
     return user;
+  }
+
+  /**
+   * Validate user role
+   *
+   * @param {UserEntity} user
+   * @param {string} roleCode
+   * @returns {boolean}
+   */
+  private checkHasRole(user: UserEntity, roleCode: string): boolean {
+    return user.roles.some((role) => role.code === roleCode);
   }
 }

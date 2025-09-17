@@ -66,6 +66,7 @@ export class UsersService {
       JOIN gate.user_roles ur ON u.id = ur.user_id AND ur.deleted_at IS NULL
       JOIN gate.roles r ON ur.role_id = r.id AND r.deleted_at IS NULL
     `;
+
     const users = QueryHelper.paginateRawQuery(
       this.userRepository,
       sql,
@@ -76,6 +77,9 @@ export class UsersService {
         groupBy: 'GROUP BY u.id',
       },
     );
+
+    // delete password field from each user
+    (await users).docs.forEach((user) => delete user.password);
 
     return users;
   }
@@ -100,6 +104,8 @@ export class UsersService {
       const { id, code, name } = role;
       return { id, code, name } as RoleEntity;
     });
+
+    delete user.password;
 
     return user;
   }
@@ -132,7 +138,13 @@ export class UsersService {
 
     Object.assign(user, updateUserDto);
 
-    return await this.userRepository.save(user);
+    // Remove roles from user object to prevent updating roles here
+    delete user.roles;
+
+    const savedUser = await this.userRepository.save(user);
+    delete savedUser.password;
+
+    return savedUser;
   }
 
   /**
@@ -150,6 +162,7 @@ export class UsersService {
 
     await this.userRepository.softDelete(user.id);
 
+    delete user.password;
     return user;
   }
 

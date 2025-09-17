@@ -20,6 +20,8 @@ import PaginationRequest, {
 } from '@/common/decorator/pagination-request.decorator';
 import { PaginationResponseType } from '@/common/helper/query.helper';
 import { IsGlobalAccess } from '@/common/decorator/is-global-access.decorator';
+import { AuthorizeRole } from '@/common/decorator/authorize-role.decorator';
+import { RoleEnum } from '../roles/enums/role.enum';
 
 @Controller('users')
 export class UsersController {
@@ -49,6 +51,7 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ tags: ['List User'] })
   @ResponseMessage('User list fetched successfully')
+  @AuthorizeRole([RoleEnum.ADMIN])
   findAll(
     @PaginationRequest() pagination: PaginationRequestType,
   ): Promise<PaginationResponseType<UserEntity>> {
@@ -65,6 +68,7 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ tags: ['Get User'] })
   @ResponseMessage('User fetched successfully')
+  @AuthorizeRole([RoleEnum.ADMIN])
   findOne(@NumberId('id') id: number): Promise<UserEntity> {
     return this.usersService.findOne(+id);
   }
@@ -80,6 +84,7 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ tags: ['Update User'] })
   @ResponseMessage('User updated successfully')
+  @AuthorizeRole([RoleEnum.ADMIN])
   update(
     @NumberId('id') id: number,
     @Body() updateUserDto: UpdateUserDto,
@@ -97,6 +102,7 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ tags: ['Delete User'] })
   @ResponseMessage('User deleted successfully')
+  @AuthorizeRole([RoleEnum.ADMIN])
   remove(@NumberId('id') id: number): Promise<UserEntity> {
     return this.usersService.remove(+id);
   }
