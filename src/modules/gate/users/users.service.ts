@@ -11,7 +11,6 @@ import {
 } from '@/common/helper/query.helper';
 import { HashHelper } from '@/common/helper/hash.helper';
 import Validation from '@/common/error/validation.error';
-import { UserRoleEntity } from './entities/user-roles.entity';
 import { RoleEntity } from '../roles/entities/role.entity';
 
 @Injectable()

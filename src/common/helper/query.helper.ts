@@ -1,4 +1,3 @@
-import { groupBy } from 'rxjs';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 
 export interface PaginationRequestType {
@@ -181,8 +180,8 @@ export class QueryHelper {
 
     // Search
     if (search && searchFields.length > 0) {
-      const safeSearchFields = searchFields.filter((f) =>
-        validColumns.includes(f) && f !== 'deleted_at',
+      const safeSearchFields = searchFields.filter(
+        (f) => validColumns.includes(f) && f !== 'deleted_at',
       );
 
       if (safeSearchFields.length > 0) {
@@ -267,7 +266,7 @@ export class QueryHelper {
     const docs = await repo.query(sql, parameters);
 
     // Count query (without LIMIT/OFFSET)
-    let countSql = sql
+    const countSql = sql
       // remove ORDER BY and everything after
       .replace(/ORDER BY[\s\S]*$/i, '')
       // remove pagination

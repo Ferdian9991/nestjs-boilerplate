@@ -22,10 +22,10 @@ export default class Connection {
   /**
    * Constructor
    *
-   * @param {MixedList<string | Function | EntitySchema<any>>} entities - The entities to be used in the database connection
+   * @param {MixedList<string | EntitySchema<any> | any>} entities - The entities to be used in the database connection
    */
   constructor(
-    protected entities: MixedList<string | EntitySchema<any> | Function>,
+    protected entities: MixedList<string | EntitySchema<any> | any>,
   ) {}
 
   public getProviders() {
