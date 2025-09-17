@@ -43,7 +43,7 @@ export class UsersController {
   /**
    * Get all users
    *
-   * @returns {Promise<UserEntity[]>}
+   * @returns {Promise<PaginationResponseType<UserEntity>>}
    */
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -91,7 +91,7 @@ export class UsersController {
    * Delete a user by id
    *
    * @param {number} id
-   * @returns {Promise<void>}
+   * @returns {Promise<UserEntity>}
    */
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)

@@ -43,7 +43,7 @@ export class UsersService {
    * Find all users
    *
    * @param {PaginationRequestType} params
-   * @returns {Promise<UserEntity[]>}
+   * @returns {Promise<PaginationResponseType<UserEntity>>}
    */
   async findAll(
     params: PaginationRequestType,
