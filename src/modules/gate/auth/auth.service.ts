@@ -42,7 +42,7 @@ export class AuthService {
 
     const payload = { sub: user.id };
     const jwt = await this.jwtService.signAsync(payload, {
-      secret: ConfigHelper.get('APP_SECRET'),
+      secret: ConfigHelper.get<string>('APP_SECRET'),
       expiresIn: '1d',
     });
 
