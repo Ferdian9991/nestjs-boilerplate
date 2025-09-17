@@ -21,7 +21,6 @@ export class CreateUsersTableMigration1758049298199
             type: 'varchar',
             length: '255',
             isNullable: false,
-            isUnique: true,
           },
           {
             name: 'fullname',
@@ -34,7 +33,6 @@ export class CreateUsersTableMigration1758049298199
             type: 'varchar',
             length: '255',
             isNullable: false,
-            isUnique: true,
           },
           {
             name: 'password',
@@ -72,6 +70,7 @@ export class CreateUsersTableMigration1758049298199
         name: 'IDX_user_username',
         columnNames: ['username'],
         isUnique: true,
+        where: 'deleted_at IS NULL',
       }),
     );
 
@@ -81,6 +80,7 @@ export class CreateUsersTableMigration1758049298199
         name: 'IDX_user_email',
         columnNames: ['email'],
         isUnique: true,
+        where: 'deleted_at IS NULL',
       }),
     );
   }

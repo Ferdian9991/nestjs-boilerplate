@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppModule } from './app/app.module';
-import { UsersModule } from './modules/gate/users/users.module';
 import { DatabaseModule } from './common/database/database.module';
 import { JwtModule } from '@nestjs/jwt';
 
@@ -15,7 +14,6 @@ import { JwtModule } from '@nestjs/jwt';
     }),
     DatabaseModule,
     AppModule,
-    UsersModule,
   ],
 })
 export class DefaultModule {}

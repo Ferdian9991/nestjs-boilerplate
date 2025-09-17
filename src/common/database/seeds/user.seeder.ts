@@ -65,6 +65,10 @@ export default class UserSeeder implements Seeder {
     const roleRepository = dataSource.getRepository(RoleEntity);
     const role = await roleRepository.findOneBy({ code });
 
+    if (!role) {
+      throw new Error(`Role with code ${code} not found`);
+    }
+
     // Get user role repository
     const userRoleRepository = dataSource.getRepository(UserRoleEntity);
 

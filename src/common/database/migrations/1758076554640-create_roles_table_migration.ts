@@ -21,7 +21,6 @@ export class CreateRolesTableMigration1758076554640
             type: 'varchar',
             length: '255',
             isNullable: false,
-            isUnique: true,
           },
           {
             name: 'name',
@@ -53,13 +52,9 @@ export class CreateRolesTableMigration1758076554640
       }),
     );
 
-    await queryRunner.createIndex(
-      'gate.roles',
-      new TableIndex({
-        name: 'IDX_role_code_with_unique',
-        columnNames: ['code'],
-        isUnique: true,
-      }),
+    // Make index on code column
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "IDX_role_code_with_unique" ON "gate"."roles" ("code") WHERE deleted_at IS NULL`,
     );
 
     // Insert default roles

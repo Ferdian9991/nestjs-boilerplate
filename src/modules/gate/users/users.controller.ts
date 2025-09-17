@@ -45,6 +45,7 @@ export class UsersController {
   /**
    * Get all users
    *
+   * @param {PaginationRequestType} pagination
    * @returns {Promise<PaginationResponseType<UserEntity>>}
    */
   @Get()

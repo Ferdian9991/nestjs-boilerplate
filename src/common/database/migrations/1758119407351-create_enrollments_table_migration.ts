@@ -77,7 +77,7 @@ export class CreateEnrollmentsTableMigration1758119407351
     );
 
     await queryRunner.query(
-      `CREATE UNIQUE INDEX "IDX_enrollment_student_classroom_unique" ON "academic"."enrollments" ("student_id", "classroom_id")`,
+      `CREATE UNIQUE INDEX "IDX_enrollment_student_classroom_unique" ON "academic"."enrollments" ("student_id", "classroom_id") WHERE deleted_at IS NULL`,
     );
   }
 

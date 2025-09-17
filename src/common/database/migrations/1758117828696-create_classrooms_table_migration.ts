@@ -26,7 +26,6 @@ export class CreateClassroomsTableMigration1758117828696
             type: 'varchar',
             length: '255',
             isNullable: false,
-            isUnique: true,
           },
           {
             name: 'day',
@@ -85,6 +84,11 @@ export class CreateClassroomsTableMigration1758117828696
       }),
     );
 
+    // Create unique index on code column
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "IDX_classroom_code_with_unique" ON "academic"."classrooms" ("code") WHERE deleted_at IS NULL`,
+    );
+
     // Add foreign key for course_id
     await queryRunner.createForeignKey(
       'academic.classrooms',
@@ -115,5 +119,11 @@ export class CreateClassroomsTableMigration1758117828696
     );
   }
 
-  public async down(queryRunner: QueryRunner): Promise<void> {}
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `ALTER TABLE "academic"."classrooms" DROP CONSTRAINT "UQ_course_period"`,
+    );
+
+    await queryRunner.dropTable('academic.classrooms');
+  }
 }

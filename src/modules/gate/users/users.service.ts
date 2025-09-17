@@ -12,11 +12,12 @@ import {
 import { HashHelper } from '@/common/helper/hash.helper';
 import Validation from '@/common/error/validation.error';
 import { RoleEntity } from '../roles/entities/role.entity';
+import { GATE_USER_REPOSITORY } from './users.providers';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @Inject('USER_REPOSITORY')
+    @Inject(GATE_USER_REPOSITORY)
     private userRepository: Repository<UserEntity>,
   ) {}
 
@@ -190,6 +191,8 @@ export class UsersService {
     if (id) {
       query.andWhere('user.id != :id', { id });
     }
+
+    query.andWhere('user.deleted_at IS NULL');
 
     const existingUser = await query.getOne();
 

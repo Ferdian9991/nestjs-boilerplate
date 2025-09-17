@@ -21,7 +21,6 @@ export class CreatePeriodsTableMigration1758117578222
             type: 'varchar',
             length: '255',
             isNullable: false,
-            isUnique: true,
           },
           {
             name: 'name',
@@ -46,6 +45,11 @@ export class CreatePeriodsTableMigration1758117578222
           },
         ],
       }),
+    );
+
+    // Make index on code column
+    await queryRunner.query(
+      `CREATE INDEX "IDX_period_code" ON "academic"."periods" ("code") WHERE deleted_at IS NULL`,
     );
   }
 

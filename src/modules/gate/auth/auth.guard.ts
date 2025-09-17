@@ -12,13 +12,17 @@ import Unauthorized from '@/common/error/unauthorized.error';
 import ConfigHelper from '@/common/helper/config.helper';
 import { RoleEnum } from '../roles/enums/role.enum';
 import { UserRoleEntity } from '../users/entities/user-roles.entity';
+import {
+  GATE_USER_ROLE_REPOSITORY,
+  GATE_USER_REPOSITORY,
+} from '../users/users.providers';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
-    @Inject('USER_REPOSITORY')
+    @Inject(GATE_USER_REPOSITORY)
     private userRepository: Repository<UserEntity>,
-    @Inject('USER_ROLE_REPOSITORY')
+    @Inject(GATE_USER_ROLE_REPOSITORY)
     private userRoleRepository: Repository<UserRoleEntity>,
     private reflector: Reflector,
     private readonly jwtService: JwtService,

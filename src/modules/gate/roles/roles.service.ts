@@ -10,11 +10,12 @@ import {
 import { PaginationRequestType } from '@/common/decorator/pagination-request.decorator';
 import NotFound from '@/common/error/not-found.error';
 import Validation from '@/common/error/validation.error';
+import { GATE_ROLE_REPOSITORY } from './roles.providers';
 
 @Injectable()
 export class RolesService {
   constructor(
-    @Inject('ROLE_REPOSITORY')
+    @Inject(GATE_ROLE_REPOSITORY)
     private roleRepository: Repository<RoleEntity>,
   ) {}
 

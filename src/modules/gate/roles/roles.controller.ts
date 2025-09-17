@@ -44,6 +44,7 @@ export class RolesController {
   /**
    * Get all roles
    *
+   * @param {PaginationRequestType} pagination
    * @returns {Promise<PaginationResponseType<RoleEntity>>}
    */
   @Get()

@@ -6,13 +6,14 @@ import Unauthorized from '@/common/error/unauthorized.error';
 import { HashHelper } from '@/common/helper/hash.helper';
 import { JwtService } from '@nestjs/jwt';
 import ConfigHelper from '@/common/helper/config.helper';
+import { GATE_USER_REPOSITORY } from '../users/users.providers';
 
 export type LoginUserType = UserEntity & { accessToken?: string };
 
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject('USER_REPOSITORY')
+    @Inject(GATE_USER_REPOSITORY)
     private userRepository: Repository<UserEntity>,
     private readonly jwtService: JwtService,
   ) {}

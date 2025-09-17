@@ -55,7 +55,7 @@ export class CreateCoursesTableMigration1758117578234
 
     // Make index on code column
     await queryRunner.query(
-      `CREATE UNIQUE INDEX "IDX_course_code_with_unique" ON "academic"."courses" ("code")`,
+      `CREATE UNIQUE INDEX "IDX_course_code_with_unique" ON "academic"."courses" ("code") WHERE deleted_at IS NULL`,
     );
   }
 
