@@ -104,7 +104,7 @@ export class CoursesService {
       throw new NotFound(`Course with id ${id} not found`);
     }
 
-    return await this.courseRepository.remove(course);
+    return await this.courseRepository.softRemove(course);
   }
 
   /**

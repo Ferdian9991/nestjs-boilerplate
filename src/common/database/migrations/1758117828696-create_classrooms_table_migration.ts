@@ -34,12 +34,12 @@ export class CreateClassroomsTableMigration1758117828696
           },
           {
             name: 'start_time',
-            type: 'timestamptz',
+            type: 'time',
             isNullable: false,
           },
           {
             name: 'end_time',
-            type: 'timestamptz',
+            type: 'time',
             isNullable: false,
           },
           {
@@ -84,9 +84,9 @@ export class CreateClassroomsTableMigration1758117828696
       }),
     );
 
-    // Create unique index on code column
+    // Create unique index on "code", "course_id", "period_id" column
     await queryRunner.query(
-      `CREATE UNIQUE INDEX "IDX_classroom_code_with_unique" ON "academic"."classrooms" ("code") WHERE deleted_at IS NULL`,
+      `CREATE UNIQUE INDEX "UQ_code_course_period" ON "academic"."classrooms" ("code", "course_id", "period_id") WHERE deleted_at IS NULL`,
     );
 
     // Add foreign key for course_id
@@ -111,11 +111,6 @@ export class CreateClassroomsTableMigration1758117828696
         referencedColumnNames: ['id'],
         onDelete: 'CASCADE',
       }),
-    );
-
-    // Add unique constraint for course_id and period_id
-    await queryRunner.query(
-      `ALTER TABLE "academic"."classrooms" ADD CONSTRAINT "UQ_course_period" UNIQUE ("course_id", "period_id")`,
     );
   }
 

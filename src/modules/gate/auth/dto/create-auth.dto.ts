@@ -18,10 +18,10 @@ export class CreateAuthDto {
   @IsNotEmpty()
   @IsString()
   @MinLength(5)
-  public password: string;
+  readonly password: string;
 
   @IsNotEmpty()
   @IsString()
   @IsEnum(RoleEnum)
-  public login_as: string;
+  readonly login_as: string;
 }
