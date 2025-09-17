@@ -3,9 +3,12 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinTable,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { RoleEntity } from '../../roles/entities/role.entity';
 
 @Entity({
   name: 'gate.users',
@@ -37,4 +40,12 @@ export class UserEntity {
 
   @DeleteDateColumn({ nullable: true, type: 'timestamptz' })
   deleted_at!: Date;
+
+  @ManyToMany(() => RoleEntity)
+  @JoinTable({
+    name: 'gate.user_roles',
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
+  })
+  roles: RoleEntity[];
 }

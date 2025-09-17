@@ -99,7 +99,7 @@ export class RolesService {
       throw new NotFound(`Role with id ${id} not found`);
     }
 
-    return await this.roleRepository.remove(role);
+    return await this.roleRepository.softRemove(role);
   }
 
   /**

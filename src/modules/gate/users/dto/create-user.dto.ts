@@ -1,10 +1,14 @@
 import {
   IsEmail,
+  IsEnum,
   IsNotEmpty,
+  IsNumber,
+  IsOptional,
   IsString,
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { RoleEnum } from '../../roles/enums/role.enum';
 
 export class CreateUserDto {
   // Full Name
@@ -33,6 +37,12 @@ export class CreateUserDto {
   @MaxLength(1024)
   public password: string;
 
+  // Role
+  @IsOptional()
+  @IsString()
+  @IsEnum(RoleEnum)
+  readonly role_code?: string;
+
   // Is Active
-  readonly isActive: boolean;
+  readonly is_ctive: boolean;
 }

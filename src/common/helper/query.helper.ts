@@ -1,3 +1,4 @@
+import { groupBy } from 'rxjs';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 
 export interface PaginationRequestType {
@@ -144,6 +145,8 @@ export class QueryHelper {
    * @param {string} alias
    * @param {PaginationRequestType} params
    * @param {string[]} searchFields
+   * @param statements
+   * @param statements.groupBy - Column to group by
    * @returns {{ sql: string; parameters: any[] }}
    */
   static buildRawQuery<T>(
@@ -152,20 +155,34 @@ export class QueryHelper {
     alias: string,
     params: PaginationRequestType,
     searchFields: string[] = [],
+    statements = {
+      groupBy: '',
+    },
   ): { sql: string; parameters: any[] } {
     const { search, filter, sort, pagination } = params;
     let sql = baseQuery;
     const conditions: string[] = [];
     const parameters: any[] = [];
-    let paramIndex = 1; // keep track of $ placeholders
+
+    // keep track of $ placeholders
+    let paramIndex = 1;
 
     // Get valid columns from entity metadata
     const validColumns = this.getEntityColumns(repo);
 
+    // Add filter in last where deleted_at IS NULL
+    if (validColumns.includes('deleted_at')) {
+      conditions.push(`${alias}.deleted_at IS NULL`);
+      const index = validColumns.indexOf('deleted_at');
+      if (index > -1) {
+        validColumns.splice(index, 1);
+      }
+    }
+
     // Search
     if (search && searchFields.length > 0) {
       const safeSearchFields = searchFields.filter((f) =>
-        validColumns.includes(f),
+        validColumns.includes(f) && f !== 'deleted_at',
       );
 
       if (safeSearchFields.length > 0) {
@@ -173,14 +190,14 @@ export class QueryHelper {
           .map((field) => `${alias}.${field} ILIKE $${paramIndex++}`)
           .join(' OR ');
         conditions.push(`(${searchConditions})`);
-        parameters.push(...searchFields.map(() => `%${search}%`));
+        parameters.push(...safeSearchFields.map(() => `%${search}%`));
       }
     }
 
     // Filter
     if (filter) {
       Object.entries(filter).forEach(([key, value]) => {
-        if (validColumns.includes(key)) {
+        if (validColumns.includes(key) && key !== 'deleted_at') {
           conditions.push(`${alias}.${key} = $${paramIndex++}`);
           parameters.push(value);
         }
@@ -189,6 +206,11 @@ export class QueryHelper {
 
     if (conditions.length > 0) {
       sql += ` WHERE ${conditions.join(' AND ')}`;
+    }
+
+    // Group By
+    if (statements.groupBy.length > 0) {
+      sql += ` ${statements.groupBy}`;
     }
 
     // Sort
@@ -229,6 +251,9 @@ export class QueryHelper {
     alias: string,
     params: PaginationRequestType,
     searchFields: string[] = [],
+    statements = {
+      groupBy: '',
+    },
   ): Promise<PaginationResponseType<T>> {
     const { sql, parameters } = this.buildRawQuery(
       repo,
@@ -236,17 +261,20 @@ export class QueryHelper {
       alias,
       params,
       searchFields,
+      statements,
     );
 
     const docs = await repo.query(sql, parameters);
 
     // Count query (without LIMIT/OFFSET)
-    let countSql = baseQuery;
-    if (sql.includes('WHERE')) {
-      countSql += ` WHERE ${sql.split('WHERE')[1].split('ORDER BY')[0].split('LIMIT')[0]}`;
-    }
+    let countSql = sql
+      // remove ORDER BY and everything after
+      .replace(/ORDER BY[\s\S]*$/i, '')
+      // remove pagination
+      .replace(/LIMIT \d+ OFFSET \d+/i, '');
+
     const countResult = await repo.query(
-      `SELECT COUNT(*) as total FROM (${countSql}) as sub`,
+      `SELECT COUNT(*) as total FROM (${countSql}) AS subquery`,
       parameters,
     );
 

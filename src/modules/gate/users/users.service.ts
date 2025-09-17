@@ -11,6 +11,8 @@ import {
 } from '@/common/helper/query.helper';
 import { HashHelper } from '@/common/helper/hash.helper';
 import Validation from '@/common/error/validation.error';
+import { UserRoleEntity } from './entities/user-roles.entity';
+import { RoleEntity } from '../roles/entities/role.entity';
 
 @Injectable()
 export class UsersService {
@@ -48,10 +50,35 @@ export class UsersService {
   async findAll(
     params: PaginationRequestType,
   ): Promise<PaginationResponseType<UserEntity>> {
-    return QueryHelper.paginate(this.userRepository, 'user', params, [
-      'fullname',
-      'email',
-    ]);
+    const sql = `
+      SELECT 
+        u.*,
+        COALESCE(
+          JSON_AGG(
+            JSON_BUILD_OBJECT(
+              'id', r.id,
+              'code', r.code,
+              'name', r.name
+            )
+          ) FILTER (WHERE r.id IS NOT NULL),
+          '[]'::json
+        ) AS roles
+      FROM gate.users u
+      JOIN gate.user_roles ur ON u.id = ur.user_id AND ur.deleted_at IS NULL
+      JOIN gate.roles r ON ur.role_id = r.id AND r.deleted_at IS NULL
+    `;
+    const users = QueryHelper.paginateRawQuery(
+      this.userRepository,
+      sql,
+      'u',
+      params,
+      ['fullname', 'email', 'deleted_at'],
+      {
+        groupBy: 'GROUP BY u.id',
+      },
+    );
+
+    return users;
   }
 
   /**
@@ -61,11 +88,19 @@ export class UsersService {
    * @returns {Promise<UserEntity>}
    */
   async findOne(id: number): Promise<UserEntity> {
-    const user = await this.userRepository.findOne({ where: { id } });
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['roles'],
+    });
 
     if (!user) {
       throw new NotFound(`User with id ${id} not found`);
     }
+
+    user.roles = user.roles.map((role) => {
+      const { id, code, name } = role;
+      return { id, code, name } as RoleEntity;
+    });
 
     return user;
   }
@@ -114,7 +149,9 @@ export class UsersService {
       throw new NotFound(`User with id ${id} not found`);
     }
 
-    return await this.userRepository.remove(user);
+    await this.userRepository.softDelete(user.id);
+
+    return user;
   }
 
   /**
