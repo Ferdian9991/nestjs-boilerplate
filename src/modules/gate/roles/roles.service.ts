@@ -42,10 +42,12 @@ export class RolesService {
   findAll(
     params: PaginationRequestType,
   ): Promise<PaginationResponseType<RoleEntity>> {
-    return QueryHelper.paginate(this.roleRepository, 'role', params, [
-      'code',
-      'name',
-    ]);
+    return QueryHelper.paginate({
+      repo: this.roleRepository,
+      alias: 'role',
+      params,
+      searchFields: ['code', 'name'],
+    });
   }
 
   /**

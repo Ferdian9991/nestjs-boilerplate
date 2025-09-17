@@ -67,16 +67,16 @@ export class UsersService {
       JOIN gate.roles r ON ur.role_id = r.id AND r.deleted_at IS NULL
     `;
 
-    const users = QueryHelper.paginateRawQuery(
-      this.userRepository,
-      sql,
-      'u',
+    const users = QueryHelper.paginateRawQuery({
+      repo: this.userRepository,
+      baseQuery: sql,
+      alias: 'u',
       params,
-      ['fullname', 'email', 'deleted_at'],
-      {
+      searchFields: ['fullname', 'email', 'deleted_at'],
+      statements: {
         groupBy: 'GROUP BY u.id',
       },
-    );
+    });
 
     // delete password field from each user
     (await users).docs.forEach((user) => delete user.password);

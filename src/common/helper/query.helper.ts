@@ -36,18 +36,28 @@ export class QueryHelper {
   /**
    * Build a TypeORM query with search, filter, sort, and pagination
    *
-   * @param {Repository<T>} repo
-   * @param {string} alias
-   * @param {PaginationRequestType} params
-   * @param {(keyof T)[]} searchFields
+   * @param {Object} options
+   * @param {Repository<T>} options.repo
+   * @param {string} options.alias
+   * @param {PaginationRequestType} options.params
+   * @param {(keyof T)[]} options.searchFields
    * @returns {SelectQueryBuilder<T>}
    */
   public static buildQuery<T>(
-    repo: Repository<T>,
-    alias: string,
-    params: PaginationRequestType,
-    searchFields: (keyof T)[] = [],
+    options: {
+      repo: Repository<T>;
+      alias: string;
+      params: PaginationRequestType;
+      searchFields: (keyof T)[];
+    } = {
+      repo: null,
+      alias: '',
+      params: {},
+      searchFields: [],
+    },
   ): SelectQueryBuilder<T> {
+    const { repo, alias, params, searchFields } = options;
+
     const { search, filter, sort, pagination } = params;
     const queryBuilder = repo.createQueryBuilder(alias);
 
@@ -103,19 +113,29 @@ export class QueryHelper {
   /**
    * Paginate a TypeORM query
    *
-   * @param {Repository<T>} repo
-   * @param {string} alias
-   * @param {PaginationRequestType} params
-   * @param {(keyof T)[]} searchFields
+   * @param {Object} options
+   * @param {Repository<T>} options.repo
+   * @param {string} options.alias
+   * @param {PaginationRequestType} options.params
+   * @param {(keyof T)[]} options.searchFields
    * @returns {Promise<PaginationResponseType<T>>}
    */
   public static async paginate<T>(
-    repo: Repository<T>,
-    alias: string,
-    params: PaginationRequestType,
-    searchFields: (keyof T)[] = [],
+    options: {
+      repo: Repository<T>;
+      alias: string;
+      params: PaginationRequestType;
+      searchFields: (keyof T)[];
+    } = {
+      repo: null,
+      alias: '',
+      params: {},
+      searchFields: [],
+    },
   ): Promise<PaginationResponseType<T>> {
-    const queryBuilder = this.buildQuery(repo, alias, params, searchFields);
+    const { repo, alias, params, searchFields } = options;
+
+    const queryBuilder = this.buildQuery({ repo, alias, params, searchFields });
     const [docs, total] = await queryBuilder.getManyAndCount();
     const page = params.pagination?.page ?? 1;
     const limit = params.pagination?.limit ?? 10;
@@ -140,24 +160,38 @@ export class QueryHelper {
   /**
    * Build raw SQL with search, filter, sort, pagination
    *
-   * @param {string} baseQuery
-   * @param {string} alias
-   * @param {PaginationRequestType} params
-   * @param {string[]} searchFields
-   * @param statements
-   * @param statements.groupBy - Column to group by
+   * @param {Object} options
+   * @param {Repository<T>} options.repo
+   * @param {string} options.baseQuery
+   * @param {string} options.alias
+   * @param {PaginationRequestType} options.params
+   * @param {string[]} options.searchFields
+   * @param {Record<string, string>} options.statements
+   * @param {string} options.statements.groupBy - Column to group by
    * @returns {{ sql: string; parameters: any[] }}
    */
   static buildRawQuery<T>(
-    repo: Repository<T>,
-    baseQuery: string,
-    alias: string,
-    params: PaginationRequestType,
-    searchFields: string[] = [],
-    statements = {
-      groupBy: '',
+    options: {
+      repo: Repository<T>;
+      baseQuery: string;
+      alias: string;
+      params: PaginationRequestType;
+      searchFields: string[];
+      statements: Record<string, string>;
+    } = {
+      repo: null,
+      baseQuery: '',
+      alias: '',
+      params: {},
+      searchFields: [],
+      statements: {
+        groupBy: '',
+      },
     },
   ): { sql: string; parameters: any[] } {
+    const { repo, baseQuery, alias, params, searchFields, statements } =
+      options;
+
     const { search, filter, sort, pagination } = params;
     let sql = baseQuery;
     const conditions: string[] = [];
@@ -237,31 +271,46 @@ export class QueryHelper {
   /**
    * Paginate a raw SQL query
    *
-   * @param {Repository<T>} repo
-   * @param {string} baseQuery
-   * @param {string} alias
-   * @param {PaginationRequestType} params
-   * @param {string[]} searchFields
+   * @param {Object} options
+   * @param {Repository<T>} options.repo
+   * @param {string} options.baseQuery
+   * @param {string} options.alias
+   * @param {PaginationRequestType} options.params
+   * @param {string[]} options.searchFields
+   * @param {Record<string, string>} options.statements
+   * @param {string} options.statements.groupBy - Column to group by
    * @returns {Promise<PaginationResponseType<T>>}
    */
   static async paginateRawQuery<T>(
-    repo: Repository<T>,
-    baseQuery: string,
-    alias: string,
-    params: PaginationRequestType,
-    searchFields: string[] = [],
-    statements = {
-      groupBy: '',
+    options: {
+      repo: Repository<T>;
+      baseQuery: string;
+      alias: string;
+      params: PaginationRequestType;
+      searchFields: string[];
+      statements: Record<string, string>;
+    } = {
+      repo: null,
+      baseQuery: '',
+      alias: '',
+      params: {},
+      searchFields: [],
+      statements: {
+        groupBy: '',
+      },
     },
   ): Promise<PaginationResponseType<T>> {
-    const { sql, parameters } = this.buildRawQuery(
+    const { repo, baseQuery, alias, params, searchFields, statements } =
+      options;
+
+    const { sql, parameters } = this.buildRawQuery({
       repo,
       baseQuery,
       alias,
       params,
       searchFields,
       statements,
-    );
+    });
 
     const docs = await repo.query(sql, parameters);
 
