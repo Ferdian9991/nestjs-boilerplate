@@ -22,7 +22,7 @@ export class CreateEnrollmentsTableMigration1758119407351
             isPrimary: true,
           },
           {
-            name: 'student_id',
+            name: 'participant_id',
             type: 'bigint',
             isNullable: false,
             unsigned: true,
@@ -64,11 +64,11 @@ export class CreateEnrollmentsTableMigration1758119407351
       }),
     );
 
-    // Add foreign key for student_id to users table
+    // Add foreign key for participant_id to users table
     await queryRunner.createForeignKey(
       'academic.enrollments',
       new TableForeignKey({
-        columnNames: ['student_id'],
+        columnNames: ['participant_id'],
         referencedSchema: 'gate',
         referencedTableName: 'users',
         referencedColumnNames: ['id'],
@@ -77,7 +77,7 @@ export class CreateEnrollmentsTableMigration1758119407351
     );
 
     await queryRunner.query(
-      `CREATE UNIQUE INDEX "IDX_enrollment_student_classroom_unique" ON "academic"."enrollments" ("student_id", "classroom_id") WHERE deleted_at IS NULL`,
+      `CREATE UNIQUE INDEX "IDX_enrollment_student_classroom_unique" ON "academic"."enrollments" ("participant_id", "classroom_id") WHERE deleted_at IS NULL`,
     );
   }
 
@@ -96,7 +96,7 @@ export class CreateEnrollmentsTableMigration1758119407351
       );
     }
     const foreignKeyStudent = table.foreignKeys.find(
-      (fk) => fk.columnNames.indexOf('student_id') !== -1,
+      (fk) => fk.columnNames.indexOf('participant_id') !== -1,
     );
     if (foreignKeyStudent) {
       await queryRunner.dropForeignKey(
