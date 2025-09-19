@@ -53,7 +53,7 @@ export class EnrollmentsService {
     createEnrollmentDto: CreateEnrollmentDto,
   ): Promise<ClassroomEntity> {
     return await this.dataSource.transaction(async (manager) => {
-      return await this.addEnrollment(manager, auth, createEnrollmentDto);
+      return await this.addEnrollmentClass(manager, auth, createEnrollmentDto);
     });
   }
 
@@ -176,7 +176,7 @@ export class EnrollmentsService {
    * @param {CreateEnrollmentDto} enrollment
    * @returns {Promise<ClassroomEntity>}
    */
-  private async addEnrollment(
+  private async addEnrollmentClass(
     manager: EntityManager,
     auth: AuthType,
     enrollment: CreateEnrollmentDto,
