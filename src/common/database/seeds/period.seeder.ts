@@ -31,7 +31,7 @@ export default class PeriodSeeder implements Seeder {
     try {
       // Insert many records in database.
       await periodFactory.saveMany(5);
-    } catch (error) {
+    } catch {
       // Assume that any error is due to duplicate entries and ignore it.
       console.warn('Periods already seeded, skipping...');
     }

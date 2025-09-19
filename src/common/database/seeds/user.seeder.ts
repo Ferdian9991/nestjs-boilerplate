@@ -36,6 +36,30 @@ export default class UserSeeder implements Seeder {
       await this.assignRoleToUser(dataSource, user, RoleEnum.ADMIN);
     }
 
+    // Insert student user
+    const dataStudent = {
+      username: 'mahasiswa',
+      fullname: 'Mahasiswa',
+      email: 'mahasiswa@yopmail.com',
+      password: await HashHelper.hash('12341234'),
+      is_ctive: true,
+    };
+
+    let userStudent = await userRepository.findOneBy({
+      username: dataStudent.username,
+    });
+
+    // Insert only one record with this username.
+    if (!userStudent) {
+      const userStudentCreate = userRepository.create(dataStudent);
+      userStudent = await userRepository.save(userStudentCreate);
+    }
+
+    // Assign role to user
+    if (userStudent) {
+      await this.assignRoleToUser(dataSource, userStudent, RoleEnum.MAHASISWA);
+    }
+
     // Get user factory from factory manager.
 
     const userFactory = factoryManager.get(UserEntity);

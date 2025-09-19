@@ -3,16 +3,13 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   HttpCode,
   HttpStatus,
-  ParseArrayPipe,
 } from '@nestjs/common';
 import { EnrolledClassroom, EnrollmentsService } from './enrollments.service';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
-import { UpdateEnrollmentDto } from './dto/update-enrollment.dto';
 import PaginationRequest, {
   PaginationRequestType,
 } from '@/common/decorator/pagination-request.decorator';
@@ -21,8 +18,6 @@ import { ApiOperation } from '@nestjs/swagger';
 import { ResponseMessage } from '@/common/decorator/response-message.decorator';
 import { RoleEnum } from '@/modules/gate/roles/enums/role.enum';
 import { AuthorizeRole } from '@/common/decorator/authorize-role.decorator';
-import ValidationHelper from '@/common/helper/validation.helper';
-import { EnrollmentEntity } from './entities/enrollment.entity';
 import Auth, { AuthType } from '@/common/decorator/auth.decorator';
 import { ClassroomEntity } from '../classrooms/entities/classroom.entity';
 
@@ -40,7 +35,7 @@ export class EnrollmentsController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ tags: ['Create Enrollment'] })
   @ResponseMessage('Enrollment created successfully')
-  @AuthorizeRole([RoleEnum.MAHASISWA, RoleEnum.ADMIN])
+  @AuthorizeRole([RoleEnum.MAHASISWA])
   create(
     @Auth() auth: AuthType,
     @Body() createEnrollmentDto: CreateEnrollmentDto,
@@ -68,14 +63,6 @@ export class EnrollmentsController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.enrollmentsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateEnrollmentDto: UpdateEnrollmentDto,
-  ) {
-    return this.enrollmentsService.update(+id, updateEnrollmentDto);
   }
 
   @Delete(':id')

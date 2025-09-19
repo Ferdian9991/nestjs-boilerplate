@@ -1,6 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
-import { UpdateEnrollmentDto } from './dto/update-enrollment.dto';
 import { ACADEMIC_ENROLLMENT_REPOSITORY } from './enrollments.providers';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { EnrollmentEntity } from './entities/enrollment.entity';
@@ -10,7 +9,6 @@ import {
   QueryHelper,
 } from '@/common/helper/query.helper';
 import Validation from '@/common/error/validation.error';
-import { ACADEMIC_PERIOD_REPOSITORY } from '../periods/periods.providers';
 import { PeriodEntity } from '../periods/entities/period.entity';
 import { ClassroomEntity } from '../classrooms/entities/classroom.entity';
 import { AuthType } from '@/common/decorator/auth.decorator';
@@ -102,10 +100,6 @@ export class EnrollmentsService {
 
   findOne(id: number) {
     return `This action returns a #${id} enrollment`;
-  }
-
-  update(id: number, updateEnrollmentDto: UpdateEnrollmentDto) {
-    return `This action updates a #${id} enrollment`;
   }
 
   remove(id: number) {
