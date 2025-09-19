@@ -13,6 +13,7 @@ import { PeriodEntity } from '../periods/entities/period.entity';
 import { ClassroomEntity } from '../classrooms/entities/classroom.entity';
 import { AuthType } from '@/common/decorator/auth.decorator';
 import { CourseEntity } from '../courses/entities/course.entity';
+import { ACADEMIC_CLASSROOM_REPOSITORY } from '../classrooms/classrooms.providers';
 
 export interface EnrolledClassroom {
   period: string;
@@ -34,6 +35,8 @@ export class EnrollmentsService {
   constructor(
     @Inject(ACADEMIC_ENROLLMENT_REPOSITORY)
     private enrollmentRepository: Repository<EnrollmentEntity>,
+    @Inject(ACADEMIC_CLASSROOM_REPOSITORY)
+    private classroomRepository: Repository<ClassroomEntity>,
     @Inject('DATA_SOURCE')
     private readonly dataSource: DataSource,
   ) {}
@@ -98,12 +101,71 @@ export class EnrollmentsService {
     return enrolledClassrooms;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} enrollment`;
+  /**
+   * Find one enrollment by id
+   *
+   * @param {number} id
+   * @returns {Promise<ClassroomEntity>}
+   */
+  async findOne(id: number): Promise<ClassroomEntity> {
+    const enrollment = await this.enrollmentRepository.findOne({
+      where: { id },
+    });
+
+    if (!enrollment) {
+      throw new Validation(`Enrollment with id ${id} not found`);
+    }
+
+    const classroom = this.classroomRepository.findOne({
+      where: { id: enrollment.classroom_id },
+    });
+
+    if (!classroom) {
+      throw new Validation(
+        `Classroom with id ${enrollment.classroom_id} not found`,
+      );
+    }
+
+    return classroom;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} enrollment`;
+  /**
+   * Remove enrollment by id
+   *
+   * @param {number} id
+   * @returns {Promise<ClassroomEntity>}
+   */
+  remove(id: number): Promise<ClassroomEntity> {
+    return this.dataSource.transaction(async (manager) => {
+      const enrollment = await manager
+        .getRepository(EnrollmentEntity)
+        .findOne({ where: { id }, lock: { mode: 'pessimistic_write' } });
+
+      if (!enrollment) {
+        throw new Validation(`Enrollment with id ${id} not found`);
+      }
+
+      const classroom = await manager.getRepository(ClassroomEntity).findOne({
+        where: { id: enrollment.classroom_id },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!classroom) {
+        throw new Validation(
+          `Classroom with id ${enrollment.classroom_id} not found`,
+        );
+      }
+
+      // Delete enrollment
+      await manager.getRepository(EnrollmentEntity).remove(enrollment);
+
+      // Decrease classroom participants count
+      classroom.participants_count = Math.max(
+        0,
+        classroom.participants_count - 1,
+      );
+      return await manager.getRepository(ClassroomEntity).save(classroom);
+    });
   }
 
   /**

@@ -60,13 +60,33 @@ export class EnrollmentsController {
     return this.enrollmentsService.findAll(pagination);
   }
 
+  /**
+   * Get an enrollment by id
+   *
+   * @param {number} id
+   * @returns {Promise<EnrollmentEntity>}
+   */
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ tags: ['Get Enrollment'] })
+  @ResponseMessage('Enrollment fetched successfully')
+  @AuthorizeRole([RoleEnum.ADMIN])
+  findOne(@Param('id') id: string): Promise<ClassroomEntity> {
     return this.enrollmentsService.findOne(+id);
   }
 
+  /**
+   * Delete an enrollment by id
+   *
+   * @param {number} id
+   * @returns {Promise<ClassroomEntity>}
+   */
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ tags: ['Delete Enrollment'] })
+  @ResponseMessage('Enrollment deleted successfully')
+  @AuthorizeRole([RoleEnum.ADMIN, RoleEnum.MAHASISWA])
+  remove(@Param('id') id: string): Promise<ClassroomEntity> {
     return this.enrollmentsService.remove(+id);
   }
 }
