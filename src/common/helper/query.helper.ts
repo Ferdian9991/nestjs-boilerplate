@@ -168,6 +168,7 @@ export class QueryHelper {
    * @param {string[]} options.searchFields
    * @param {Record<string, string>} options.statements
    * @param {string} options.statements.groupBy - Column to group by
+   * @param {boolean} options.skipCheckValidColumns - Skip checking valid columns from entity metadata
    * @returns {{ sql: string; parameters: any[] }}
    */
   static buildRawQuery<T>(
@@ -178,6 +179,7 @@ export class QueryHelper {
       params: PaginationRequestType;
       searchFields: string[];
       statements: Record<string, string>;
+      skipCheckValidColumns?: boolean;
     } = {
       repo: null,
       baseQuery: '',
@@ -187,6 +189,7 @@ export class QueryHelper {
       statements: {
         groupBy: '',
       },
+      skipCheckValidColumns: false,
     },
   ): { sql: string; parameters: any[] } {
     const { repo, baseQuery, alias, params, searchFields, statements } =
@@ -201,7 +204,12 @@ export class QueryHelper {
     let paramIndex = 1;
 
     // Get valid columns from entity metadata
-    const validColumns = this.getEntityColumns(repo);
+    let validColumns = this.getEntityColumns(repo);
+
+    // Skip checking valid columns
+    if (options.skipCheckValidColumns) {
+      validColumns = [...validColumns, ...searchFields];
+    }
 
     // Add filter in last where deleted_at IS NULL
     if (validColumns.includes('deleted_at')) {
@@ -279,6 +287,7 @@ export class QueryHelper {
    * @param {string[]} options.searchFields
    * @param {Record<string, string>} options.statements
    * @param {string} options.statements.groupBy - Column to group by
+   * @param {boolean} options.skipCheckValidColumns - Skip checking valid columns from entity metadata
    * @returns {Promise<PaginationResponseType<T>>}
    */
   static async paginateRawQuery<T>(
@@ -288,7 +297,8 @@ export class QueryHelper {
       alias: string;
       params: PaginationRequestType;
       searchFields: string[];
-      statements: Record<string, string>;
+      statements?: Record<string, string>;
+      skipCheckValidColumns?: boolean;
     } = {
       repo: null,
       baseQuery: '',
@@ -298,10 +308,18 @@ export class QueryHelper {
       statements: {
         groupBy: '',
       },
+      skipCheckValidColumns: false,
     },
   ): Promise<PaginationResponseType<T>> {
-    const { repo, baseQuery, alias, params, searchFields, statements } =
-      options;
+    const {
+      repo,
+      baseQuery,
+      alias,
+      params,
+      searchFields,
+      statements,
+      skipCheckValidColumns,
+    } = options;
 
     const { sql, parameters } = this.buildRawQuery({
       repo,
@@ -309,7 +327,8 @@ export class QueryHelper {
       alias,
       params,
       searchFields,
-      statements,
+      statements: statements || { groupBy: '' },
+      skipCheckValidColumns,
     });
 
     const docs = await repo.query(sql, parameters);
