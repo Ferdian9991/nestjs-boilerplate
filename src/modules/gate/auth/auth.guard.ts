@@ -52,20 +52,24 @@ export class AuthGuard implements CanActivate {
     );
 
     try {
-      req.user = this.jwtService.verify(token, {
+      const payload = this.jwtService.verify<{
+        sub: number;
+        role_id: number;
+        role_code: RoleEnum;
+      }>(token, {
         secret: ConfigHelper.get<string>('APP_SECRET'),
       });
 
       //   Check if user exists
-      const user = await this.userRepository.findOneBy({ id: req.user.sub });
-      if (!user) {
+      req.user = await this.userRepository.findOneBy({ id: payload.sub });
+      if (!req.user) {
         throw invalidCredentialsException;
       }
 
       // Check if user role exists
       const userRole = await this.userRoleRepository.findOneBy({
-        role_id: req.user.role_id,
-        user_id: req.user.sub,
+        role_id: payload.role_id,
+        user_id: payload.sub,
       });
 
       // If user role does not exist, throw error
@@ -86,7 +90,7 @@ export class AuthGuard implements CanActivate {
       }
 
       // Check if user has required role
-      if (!req.user.role_code || !authorizeRoles.includes(req.user.role_code)) {
+      if (!payload.role_code || !authorizeRoles.includes(payload.role_code)) {
         return false;
       }
 

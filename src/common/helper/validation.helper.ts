@@ -28,6 +28,13 @@ export default class ValidationHelper {
   public static getExceptionFactory(
     validationErrors: ValidationError[],
   ): Validation {
+    // check if validationErrors is string
+    if (typeof validationErrors === 'string') {
+      return new Validation(
+        JSON.stringify([{ field: 'none', message: validationErrors }]),
+      );
+    }
+
     const errors: ValidationErrorType[] = validationErrors.map((error) => {
       return {
         index:

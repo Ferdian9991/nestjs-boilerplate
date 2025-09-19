@@ -8,6 +8,7 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  ParseArrayPipe,
 } from '@nestjs/common';
 import { EnrolledClassroom, EnrollmentsService } from './enrollments.service';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
@@ -20,14 +21,31 @@ import { ApiOperation } from '@nestjs/swagger';
 import { ResponseMessage } from '@/common/decorator/response-message.decorator';
 import { RoleEnum } from '@/modules/gate/roles/enums/role.enum';
 import { AuthorizeRole } from '@/common/decorator/authorize-role.decorator';
+import ValidationHelper from '@/common/helper/validation.helper';
+import { EnrollmentEntity } from './entities/enrollment.entity';
+import Auth, { AuthType } from '@/common/decorator/auth.decorator';
+import { ClassroomEntity } from '../classrooms/entities/classroom.entity';
 
 @Controller('enrollments')
 export class EnrollmentsController {
   constructor(private readonly enrollmentsService: EnrollmentsService) {}
 
+  /**
+   * Create a new enrollment
+   *
+   * @param {CreateEnrollmentDto[]} createEnrollmentDto
+   * @returns {Promise<EnrollmentEntity[]>}
+   */
   @Post()
-  create(@Body() createEnrollmentDto: CreateEnrollmentDto) {
-    return this.enrollmentsService.create(createEnrollmentDto);
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ tags: ['Create Enrollment'] })
+  @ResponseMessage('Enrollment created successfully')
+  @AuthorizeRole([RoleEnum.MAHASISWA, RoleEnum.ADMIN])
+  create(
+    @Auth() auth: AuthType,
+    @Body() createEnrollmentDto: CreateEnrollmentDto,
+  ): Promise<ClassroomEntity> {
+    return this.enrollmentsService.create(auth, createEnrollmentDto);
   }
 
   /**
@@ -38,8 +56,8 @@ export class EnrollmentsController {
    */
   @Get()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ tags: ['List Enrollments'] })
-  @ResponseMessage('Enrollments list fetched successfully')
+  @ApiOperation({ tags: ['List Enrollment'] })
+  @ResponseMessage('Enrollment list fetched successfully')
   @AuthorizeRole([RoleEnum.ADMIN])
   findAll(
     @PaginationRequest() pagination: PaginationRequestType,
