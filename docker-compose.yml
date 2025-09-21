@@ -1,0 +1,23 @@
+---
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: app:v1
+    ports:
+      - "3001:3000"
+    volumes:
+      - ".env:/app/.env:ro"
+    container_name: app
+
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=app
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST_AUTH_METHOD=scram-sha-256
+    container_name: app-db
