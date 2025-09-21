@@ -58,6 +58,23 @@ $ yarn run test:e2e
 $ yarn run test:cov
 ```
 
+## Using Docker
+
+```bash
+# Initialize the database
+docker compose up db -d # wait 5-10 seconds for the database to initialize
+```
+
+```bash
+# Build the app image
+docker compose build app
+```
+
+```bash
+# Run the app container
+docker compose up -d
+```
+
 ## Resources
 
 Check out a few resources that may come in handy when working with NestJS:
