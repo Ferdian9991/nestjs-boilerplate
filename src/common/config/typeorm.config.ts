@@ -1,11 +1,8 @@
 import { SeederOptions } from 'typeorm-extension';
 import { DataSource, DataSourceOptions } from 'typeorm';
-import { config } from 'dotenv';
 import ConfigHelper from '../helper/config.helper';
 import { ModuleEntity } from '@/modules/module.entity';
 import InitSeeder from '../database/seed.database';
-
-config();
 
 const options: DataSourceOptions & SeederOptions = {
   type: ConfigHelper.get('DATABASE_DRIVER', 'postgres'),
